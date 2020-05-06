@@ -18,9 +18,18 @@
     <ClCompile Include="opencv_learning.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="SquareAreaCheck.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="opencv_learning.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SquareAreaCheck.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

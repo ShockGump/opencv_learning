@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <io.h>
 
 
 #include <opencv2/core/core.hpp>
@@ -29,3 +30,4 @@ cv::Mat rggb2rgb(cv::Mat bayer);
 cv::Mat bggr2rgb(cv::Mat bayer); 
 cv::Mat grbg2rgb(cv::Mat bayer);
 cv::Mat gbrg2rgb(cv::Mat bayer);
+std::vector<std::string> enmulate_files(std::string inPath);

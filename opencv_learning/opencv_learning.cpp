@@ -1,15 +1,15 @@
 #include "opencv_learning.h"
-
+#include "SquareAreaCheck.h"
 
 
 using namespace cv;
 using namespace std;
-
+/*
 int main(void)
 {
-	//GettingStartedwithImages();
+    //GettingStartedwithImages();
     //ReadARW();
-    char  imageName[] = "C:\\Users\\Administrator\\Downloads\\50cfead969df9\\RAW\\1.ARW";
+   /* char  imageName[] = "C:\\Users\\Administrator\\Downloads\\50cfead969df9\\RAW\\1.ARW";
     Mat raw = bayer2rgb(raw2mat(imageName),RGGB);
     Mat imgrgb(raw.rows,raw.cols,CV_8UC3);
     cv::namedWindow("test", WINDOW_NORMAL);
@@ -31,11 +31,62 @@ int main(void)
         waitKey(10); // Wait for a keystroke in the window
     }
     int k = waitKey(0); // Wait for a keystroke in the window
-}
 
-void GettingStartedwithImages(void) 
+
+    vector<std::string> filepath = enmulate_files("C:\\Users\\Administrator\\Desktop\\test\\*.jpg");
+
+    SquareAreaCheck sqcheck = SquareAreaCheck();
+
+    vector<vector<Point> > squares;
+    namedWindow("Square Detection", 1);
+    for (int i = 0; i < filepath.size(); i++)
+    {
+        Mat image = imread(filepath[i]);
+        if (image.empty())
+        {
+            cout << "Couldn't load " << filepath[i] << endl;
+            continue;
+        }
+
+        sqcheck.findSquares(image, squares);
+        sqcheck.drawSquares(image, squares);
+        //imwrite( "out", image );
+        int c = waitKey();
+        if ((char)c == 27)
+            break;
+    }
+
+
+
+
+
+}
+*/
+/**其算法流程：
+
+1.中值滤波去噪；
+
+2.依次提取不同的颜色通道（BGR）检测矩形；
+
+3.对每一通道使用canny检测边缘或者使用多个阈值二值化；
+
+4.使用findContours函数查找轮廓；
+
+5.使用approxPolyDP函数去除多边形轮廓一些小的波折；
+
+6.找到同时满足面积较大和形状为凸的四边形；
+
+7.判断轮廓中两两邻接直线夹角余弦是否小于0.3（意味着角度在90度附近），是则此四边形为找到的矩形。
+**/
+
+
+
+
+
+
+void GettingStartedwithImages(void)
 {
-    std::string image_path ="C:\\Users\\Administrator\\Desktop\\test.jpg";
+    std::string image_path = "C:\\Users\\Administrator\\Desktop\\test.jpg";
     Mat img = imread(image_path, IMREAD_COLOR);
     if (img.empty())
     {
@@ -82,17 +133,17 @@ void ReadARW(void)
 
     // read imgae data
     cv::Mat rawData(rawDataHeight, rawDataWidth, CV_16UC1, cv::Scalar(0));
-        for (int i = 0; i < rawDataHeight; i++)
-        {
-            uchar* pointer = rawData.ptr<uchar>(i);
-            fread(pointer, sizeof(uchar), rawDataWidth, filePointer);
-        }
+    for (int i = 0; i < rawDataHeight; i++)
+    {
+        uchar* pointer = rawData.ptr<uchar>(i);
+        fread(pointer, sizeof(uchar), rawDataWidth, filePointer);
+    }
 
-        fclose(filePointer);
+    fclose(filePointer);
 
-        cv::namedWindow("test", WINDOW_NORMAL);
-        cv::imshow("test", rawData);
-        int k = waitKey(0); // Wait for a keystroke in the window
+    cv::namedWindow("test", WINDOW_NORMAL);
+    cv::imshow("test", rawData);
+    int k = waitKey(0); // Wait for a keystroke in the window
 }
 
 cv::Mat raw2mat(char* file)
@@ -101,18 +152,18 @@ cv::Mat raw2mat(char* file)
     LibRaw iProcessor;
 
     // Open the file and read the metadata
-    int ret=iProcessor.open_file(file);
+    int ret = iProcessor.open_file(file);
 
     // The metadata are accessible through data fields of the class
     printf("Image size: %d x %d\n", iProcessor.imgdata.sizes.width, iProcessor.imgdata.sizes.height);
 
     // Let us unpack the image
-    ret=iProcessor.unpack();
-     cv::Mat rawData(iProcessor.imgdata.sizes.raw_height, iProcessor.imgdata.sizes.raw_width, CV_16UC1,Scalar(0));
+    ret = iProcessor.unpack();
+    cv::Mat rawData(iProcessor.imgdata.sizes.raw_height, iProcessor.imgdata.sizes.raw_width, CV_16UC1, Scalar(0));
     // And let us print its dump; the data are accessible through data fields of the class
     //rawdata in *iProcessor.imgdata.rawdata.raw_image
-   for (int i = 0; i < iProcessor.imgdata.sizes.raw_height * iProcessor.imgdata.sizes.raw_width; i++)
-       rawData.ptr<ushort>(i / (iProcessor.imgdata.sizes.raw_width) )[i % (iProcessor.imgdata.sizes.raw_width)] = iProcessor.imgdata.rawdata.raw_image[i];
+    for (int i = 0; i < iProcessor.imgdata.sizes.raw_height * iProcessor.imgdata.sizes.raw_width; i++)
+        rawData.ptr<ushort>(i / (iProcessor.imgdata.sizes.raw_width))[i % (iProcessor.imgdata.sizes.raw_width)] = iProcessor.imgdata.rawdata.raw_image[i];
     // Finally, let us free the image processor for work with the next image
     iProcessor.recycle();
     return rawData;
@@ -125,7 +176,7 @@ Mat rawprocess(Mat mat)
     return res;
 }
 
-cv::Mat bayer2rgb(cv::Mat bayer, int flag) 
+cv::Mat bayer2rgb(cv::Mat bayer, int flag)
 {
     Mat res(bayer.rows, bayer.cols, CV_16UC3, Scalar(255, 255, 255));
     switch (flag)
@@ -407,19 +458,19 @@ cv::Mat grbg2rgb(cv::Mat bayer)
 {
     Mat res(bayer.rows, bayer.cols, CV_16UC3, Scalar(255, 255, 255));
     //R(R,G,B)
-    for (int i = 0; i < res.rows-1; i = i + 2)
+    for (int i = 0; i < res.rows - 1; i = i + 2)
         for (int j = 1; j < res.cols; j = j + 2)
         {
             //R(R)
             res.ptr<Vec3w>(i)[j][R] = bayer.ptr<ushort>(i)[j];//
-            if ((i > 0) && (j < res.rows-1))
+            if ((i > 0) && (j < res.rows - 1))
             {
                 //R(G)
                 res.ptr<Vec3w>(i)[j][G] = (bayer.ptr<ushort>(i - 1)[j] + bayer.ptr<ushort>(i + 1)[j] + bayer.ptr<ushort>(i)[j - 1] + bayer.ptr<ushort>(i)[j + 1]) / 4;//
                 //R(B)
                 res.ptr<Vec3w>(i)[j][B] = (bayer.ptr<ushort>(i - 1)[j - 1] + bayer.ptr<ushort>(i + 1)[j - 1] + bayer.ptr<ushort>(i - 1)[j + 1] + bayer.ptr<ushort>(i + 1)[j + 1]) / 4;//
             }
-            else if ((i == 0) && (j == res.cols-1))
+            else if ((i == 0) && (j == res.cols - 1))
             {
                 //R(G)
                 res.ptr<Vec3w>(i)[j][G] = (bayer.ptr<ushort>(i + 1)[j] + bayer.ptr<ushort>(i)[j - 1]) / 2;//
@@ -433,7 +484,7 @@ cv::Mat grbg2rgb(cv::Mat bayer)
                 //R(B)
                 res.ptr<Vec3w>(i)[j][B] = (bayer.ptr<ushort>(i + 1)[j - 1] + bayer.ptr<ushort>(i + 1)[j + 1]) / 2;//
             }
-            else if ((j == res.cols-1))
+            else if ((j == res.cols - 1))
             {
                 //R(G)
                 res.ptr<Vec3w>(i)[j][G] = (bayer.ptr<ushort>(i + 1)[j] + bayer.ptr<ushort>(i - 1)[j] + bayer.ptr<ushort>(i)[j - 1]) / 3;//
@@ -444,14 +495,14 @@ cv::Mat grbg2rgb(cv::Mat bayer)
 
     //G(R,G,B)
     for (int i = 0; i < res.rows; i = i + 1)
-        for (int j = i  % 2; j < res.cols; j = j + 2)
+        for (int j = i % 2; j < res.cols; j = j + 2)
         {
             //G(R)
-            if ((i < res.rows - 1) && (j >0) && (!(i % 2)))
+            if ((i < res.rows - 1) && (j > 0) && (!(i % 2)))
             {
                 res.ptr<Vec3w>(i)[j][R] = (bayer.ptr<ushort>(i)[j + 1] + bayer.ptr<ushort>(i)[j - 1]) / 2;//
             }
-            else if ((i < res.rows - 1) && (j >0) && (i % 2))
+            else if ((i < res.rows - 1) && (j > 0) && (i % 2))
             {
                 res.ptr<Vec3w>(i)[j][R] = (bayer.ptr<ushort>(i + 1)[j] + bayer.ptr<ushort>(i - 1)[j]) / 2;//
             }
@@ -468,11 +519,11 @@ cv::Mat grbg2rgb(cv::Mat bayer)
             res.ptr<Vec3w>(i)[j][G] = bayer.ptr<ushort>(i)[j];//
 
             //G(B)
-            if ((i >0) && (j < res.cols-1) && (!(i % 2)))
+            if ((i > 0) && (j < res.cols - 1) && (!(i % 2)))
             {
                 res.ptr<Vec3w>(i)[j][B] = (bayer.ptr<ushort>(i - 1)[j] + bayer.ptr<ushort>(i + 1)[j]) / 2;//
             }
-            else if ((i >0) && (j < res.cols-1) && (i % 2))
+            else if ((i > 0) && (j < res.cols - 1) && (i % 2))
             {
                 res.ptr<Vec3w>(i)[j][B] = (bayer.ptr<ushort>(i)[j + 1] + bayer.ptr<ushort>(i)[j - 1]) / 2;//
             }
@@ -480,7 +531,7 @@ cv::Mat grbg2rgb(cv::Mat bayer)
             {
                 res.ptr<Vec3w>(i)[j][B] = bayer.ptr<ushort>(i + 1)[j];//
             }
-            else if (j == res.cols-1)
+            else if (j == res.cols - 1)
             {
                 res.ptr<Vec3w>(i)[j][B] = bayer.ptr<ushort>(i)[j - 1];//
             }
@@ -488,10 +539,10 @@ cv::Mat grbg2rgb(cv::Mat bayer)
         }
     //B(R,G,B)
     for (int i = 1; i < res.rows; i = i + 2)
-        for (int j = 0; j < res.cols-1; j = j + 2)
+        for (int j = 0; j < res.cols - 1; j = j + 2)
         {
             //B(R)
-            if ((i < res.rows - 1) && (j >0))
+            if ((i < res.rows - 1) && (j > 0))
             {
                 res.ptr<Vec3w>(i)[j][R] = (bayer.ptr<ushort>(i - 1)[j - 1] + bayer.ptr<ushort>(i + 1)[j - 1] + bayer.ptr<ushort>(i - 1)[j + 1] + bayer.ptr<ushort>(i + 1)[j + 1]) / 4;//
             }
@@ -660,4 +711,25 @@ cv::Mat gbrg2rgb(cv::Mat bayer)
         }
     return res;
 
+}
+std::vector<string> enmulate_files(std::string inPath)
+{
+    //目标文件夹路径
+    //遍历inPath文件夹下的所有.jpg文件
+    //用于查找的句柄
+    long handle;
+    vector<string> res;
+    struct _finddata_t fileinfo;
+    //第一次查找
+    handle = _findfirst(inPath.c_str(), &fileinfo);
+    if (handle == -1)
+        return res;
+    do
+    {
+        //找到的文件的文件名
+        res.push_back(inPath.substr(0, inPath.find_last_of("\\") + 1) + fileinfo.name);
+    } while (!_findnext(handle, &fileinfo));
+
+    _findclose(handle);
+    return res;
 }

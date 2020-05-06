@@ -140,10 +140,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="opencv_learning.cpp" />
+    <ClCompile Include="SquareAreaCheck.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="opencv_learning.h" />
+    <ClInclude Include="SquareAreaCheck.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
